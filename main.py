@@ -53,9 +53,7 @@ def build_hand(player_hand, dealer_face_card):
     return player_hand
 
             
-    
-    
-    
+
 def full_sequence():
     ## -- SET UP --
     # Dealer draws face card
@@ -100,12 +98,20 @@ def full_sequence():
     print("PLAYER CARDS: ", full_hand)
     ## -- FINAL VERDICT --
     player_wins = 0
+    draws = 0
     
     for hand in full_hand:
+        if (dealer_face_card+dealer_down_card) == 21 and (player_first_card+player_second_card) != 21:
+            continue
+        
         if sum(hand) - (10 if 11 in hand else 0) > 21:
             continue
         elif (sum(dealer_hand) - (10 if 11 in dealer_hand else 0)) > 21:
             player_wins += 1
+            continue
+        
+        if sum(hand) == sum(dealer_hand):
+            draws += 1
             continue
         
         best_player_sum = sum(player_hand)-10 if 11 in player_hand and sum(player_hand) > 21 else sum(player_hand)
@@ -114,24 +120,26 @@ def full_sequence():
         if best_player_sum > best_dealer_sum:
             player_wins += 1
         
-    return (player_wins, len(full_hand))
+    return (player_wins, draws, len(full_hand))
     
       
-    
-
 
 
 def main():
     player_wins = 0 
+    player_draws = 0
     current_trial = 0
     while current_trial < TRIALS:
-        win_number, hands_played = full_sequence()
+        win_number, draw_number, hands_played = full_sequence()
         print("Wins:", win_number, "Hands:", hands_played)
         player_wins += win_number
+        player_draws += draw_number
         current_trial += hands_played
-    
-    print("TOTAL WINS", player_wins, "TOTAL LOSSES", current_trial-player_wins, "TOTAL TRIALS", current_trial)
-    print("TRIAL PERCENTAGE", round(player_wins/TRIALS,2)*100, "%")
+    print("-------------------------------------------------------------")
+    print("TOTAL WINS", player_wins, "TOTAL DRAWS", player_draws, "TOTAL LOSSES", current_trial-player_wins-player_draws, "TOTAL TRIALS", current_trial)
+    print("TRIAL WIN PERCENTAGE", round(player_wins/current_trial,3)*100, "%")
+    print("TRIAL DRAW PERCENTAGE", round(round(player_draws/current_trial,3)*100,2), "%")
+    print("TRIAL LOSS PERCENTAGE", round((current_trial-player_wins-player_draws)/current_trial,3)*100, "%")
     
     
     
