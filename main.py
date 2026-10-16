@@ -25,7 +25,7 @@ def draw_card(ace_in_hand=False):
     
 def player_optimal_choice(player_hand, dealer_upcard):
     hand_value = sum(player_hand)
-    print(hand_value, dealer_upcard,player_hand)
+    #print(hand_value, dealer_upcard,player_hand)
     if 11 in player_hand:
         if hand_value > 31:
             return 'B'
@@ -48,7 +48,7 @@ def build_hand(player_hand, dealer_face_card):
         while (optimal_choice != 'S' and optimal_choice != 'B'):
             player_hand.append(draw_card(11 in player_hand))
             optimal_choice = player_optimal_choice(player_hand, dealer_face_card)
-            print(optimal_choice)
+            #print(optimal_choice)
             
     return player_hand
 
@@ -74,13 +74,16 @@ def full_sequence():
     
     #SPLIT ROUTE
     if player_first_card == player_second_card and 'Y' in double_choice_df.loc[player_first_card, dealer_face_card]:
-        print("This is a split")
+        #print("This is a split")
         double_choice = double_choice_df.loc[player_first_card, dealer_face_card]
-        if double_choice == 'Y' or double_choice == 'YD':
+        if player_first_card == 11: # split aces rule
+            player_hand_one = [player_first_card, draw_card()]
+            player_hand_two = [player_second_card, draw_card()]
+        elif double_choice == 'Y' or double_choice == 'YD':
             player_hand_one = build_hand([player_first_card, draw_card()], dealer_face_card)
             player_hand_two = build_hand([player_second_card, draw_card()], dealer_face_card)
             
-            full_hand.extend([player_hand_one, player_hand_two])
+        full_hand.extend([player_hand_one, player_hand_two])
     # REGULAR ROUTE
     else:
         full_hand.append(build_hand(player_hand, dealer_face_card))
@@ -89,13 +92,13 @@ def full_sequence():
         
     ## -- DEALER DECISION --
     dealer_hand = [dealer_down_card, dealer_face_card]
-    while ((11 in dealer_hand and sum(dealer_hand)-10 < 17) or sum(dealer_hand) < 17):
+    while ((11 in dealer_hand and sum(dealer_hand)-10 < 17 and sum(dealer_hand) > 21) or sum(dealer_hand) < 17):
         dealer_hand.append(draw_card(11 in dealer_hand))
         
     
     
-    print("DEALER CARDS: FACE: ", dealer_face_card, " DOWN: ", dealer_down_card, dealer_hand)
-    print("PLAYER CARDS: ", full_hand)
+    #print("DEALER CARDS: FACE: ", dealer_face_card, " DOWN: ", dealer_down_card, dealer_hand)
+    #print("PLAYER CARDS: ", full_hand)
     ## -- FINAL VERDICT --
     player_wins = 0
     draws = 0
@@ -122,24 +125,37 @@ def full_sequence():
         
     return (player_wins, draws, len(full_hand))
     
-      
-
-
-def main():
+def single_trial_calc(single_trial_logs=False):
     player_wins = 0 
     player_draws = 0
     current_trial = 0
     while current_trial < TRIALS:
         win_number, draw_number, hands_played = full_sequence()
-        print("Wins:", win_number, "Hands:", hands_played)
+        if single_trial_logs:
+            print("Wins:", win_number, "Hands:", hands_played)
         player_wins += win_number
         player_draws += draw_number
         current_trial += hands_played
-    print("-------------------------------------------------------------")
-    print("TOTAL WINS", player_wins, "TOTAL DRAWS", player_draws, "TOTAL LOSSES", current_trial-player_wins-player_draws, "TOTAL TRIALS", current_trial)
-    print("TRIAL WIN PERCENTAGE", round(player_wins/current_trial,3)*100, "%")
-    print("TRIAL DRAW PERCENTAGE", round(round(player_draws/current_trial,3)*100,2), "%")
-    print("TRIAL LOSS PERCENTAGE", round((current_trial-player_wins-player_draws)/current_trial,3)*100, "%")
+    if single_trial_logs:
+        print("-------------------------------------------------------------")
+        print("TOTAL WINS", player_wins, "TOTAL DRAWS", player_draws, "TOTAL LOSSES", current_trial-player_wins-player_draws, "TOTAL TRIALS", current_trial)
+        print("TRIAL WIN PERCENTAGE", round(player_wins/current_trial,3)*100, "%")
+        print("TRIAL DRAW PERCENTAGE", round(round(player_draws/current_trial,3)*100,2), "%")
+        print("TRIAL LOSS PERCENTAGE", round((current_trial-player_wins-player_draws)/current_trial,3)*100, "%")
+    return round(player_wins/current_trial,3)*100
+    
+
+
+def main():
+    number_of_trials = 10
+    percentages = []
+    for _ in range(number_of_trials):
+        result = single_trial_calc()
+        percentages.append(round(result,3))
+        
+    print("Distribution:", percentages)
+    print("Sorted Distribution:", sorted(percentages))
+    print("Mean:", round(sum(percentages)/number_of_trials,3))
     
     
     
